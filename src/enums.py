@@ -9,17 +9,16 @@ class Feature(Enum):
     SERIES = ('Series', 'category')
     SURFACE = ('Surface', 'category')
     COURT = ('Court', 'category')
-    # ROUND = ('Round', 'category')
-    DIFF_RANKING = ('diffRanking', 'number')
-    DIFF_POINTS = ('diffPoints', 'number')
-    DIFF_HEIGHT = ('diffHeight', 'number')
-    DIFF_WEIGHT = ('diffWeight', 'number')
-    DIFF_AGE = ('diffAge', 'number')
-    DIFF_PRO_AGE = ('diffProAge', 'number')
     P1_PLAY_HAND = ('p1PlayHand', 'category')
     P1_BACK_HAND = ('p1BackHand', 'category')
     P2_PLAY_HAND = ('p2PlayHand', 'category')
     P2_BACK_HAND = ('p2BackHand', 'category')
+    DIFF_RANKING = ('diffRanking', 'number')
+    DIFF_POINTS = ('diffPoints', 'number')
+    DIFF_HEIGHT = ('diffHeight', 'number')
+    DIFF_WEIGHT = ('diffWeight', 'number')
+    DIFF_PRO_AGE = ('diffProAge', 'number')
+    DIFF_AGE = ('diffAge', 'number')
     
 
     def __new__(cls, name: str, type: Literal['category', 'number']):
