@@ -1,0 +1,10 @@
+python-dotenv==1.1.0
+fastapi==0.115.12
+pandas==2.2.3
+scikit-learn==1.6.1
+mlflow-skinny==2.21.3
+boto3==1.37.34
+uvicorn==0.34.1
+gunicorn==23.0.0
+# database operations
+psycopg[binary]==3.2.6
