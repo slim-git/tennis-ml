@@ -36,6 +36,7 @@ load_dotenv()
 models = {}
 
 all_algorithms = Literal[
+    'LogisticRegression',
     'RandomForest',
     'SVM',
     'GradientBoosting',
