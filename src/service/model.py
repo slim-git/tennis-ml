@@ -386,7 +386,7 @@ def run_experiment(
     experiment = mlflow.get_experiment_by_name(experiment_name)
 
     # Call mlflow autolog
-    mlflow.sklearn.autolog()
+    mlflow.sklearn.autolog(log_models=True, log_input_examples=False, log_model_signatures=False)
 
     with mlflow.start_run(experiment_id=experiment.experiment_id):
         # Train model
