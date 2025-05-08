@@ -30,20 +30,46 @@ def simple_match():
 
 @pytest.fixture
 def simple_match_pairwise_data(simple_match: pd.DataFrame):
+    series = simple_match['tournament_series'].values[0]
+    surface = simple_match['tournament_surface'].values[0]
+    court = simple_match['tournament_court'].values[0]
+    winner_rank = simple_match['winner_rank'].values[0]
+    winner_points = simple_match['winner_points'].values[0]
+    loser_rank = simple_match['loser_rank'].values[0]
+    loser_points = simple_match['loser_points'].values[0]
+    winner_height = simple_match['w_height_cm'].values[0]
+    winner_weight = simple_match['w_weight_kg'].values[0]
+    loser_height = simple_match['l_height_cm'].values[0]
+    loser_weight = simple_match['l_weight_kg'].values[0]
+    winner_year_of_birth = simple_match['w_year_of_birth'].values[0]
+    winner_pro_year = simple_match['w_pro_year'].values[0]
+    loser_year_of_birth = simple_match['l_year_of_birth'].values[0]
+    loser_pro_year = simple_match['l_pro_year'].values[0]
+    winner_play_hand = simple_match['w_play_hand'].values[0]
+    winner_back_hand = simple_match['w_back_hand'].values[0]
+    loser_play_hand = simple_match['l_play_hand'].values[0]
+    loser_back_hand = simple_match['l_back_hand'].values[0]
+    diff_points = winner_points - loser_points
+    diff_ranking = winner_rank - loser_rank
+    diff_height = winner_height - loser_height
+    diff_weight = winner_weight - loser_weight
+    diff_pro_age = winner_pro_year - loser_pro_year
+    diff_age = winner_year_of_birth - loser_year_of_birth
+
     return pd.DataFrame({
-        'Series': ['Masters', 'Masters'],
-        'Surface': ['Hard', 'Hard'],
-        'Court': ['Outdoor', 'Outdoor'],
-        'diffPoints': [-5940, 5940],
-        'diffRanking': [-63, 63],
-        'diffHeight': [2, -2],
-        'diffWeight': [6, -6],
-        'diffProAge': [3, -3],
-        'diffAge': [1, -1],
-        'p1PlayHand': ['R', 'R'],
-        'p1BackHand': [1, 2],
-        'p2PlayHand': ['R', 'R'],
-        'p2BackHand': [2, 1],
+        'Series': [series, series],
+        'Surface': [surface, surface],
+        'Court': [court, court],
+        'diffPoints': [diff_points, -diff_points],
+        'diffRanking': [diff_ranking, -diff_ranking],
+        'diffHeight': [diff_height, -diff_height],
+        'diffWeight': [diff_weight, -diff_weight],
+        'diffProAge': [diff_pro_age, -diff_pro_age],
+        'diffAge': [diff_age, -diff_age],
+        'p1PlayHand': [winner_play_hand, loser_play_hand],
+        'p1BackHand': [winner_back_hand, loser_back_hand],
+        'p2PlayHand': [loser_play_hand, winner_play_hand],
+        'p2BackHand': [loser_back_hand, winner_back_hand],
         'target': [1, 0]
     })
 
