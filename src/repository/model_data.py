@@ -7,7 +7,7 @@ def load_model_data(limit: Optional[int] = None) -> pd.DataFrame:
     Load model data from Postgres
     """
     with get_connection() as conn:
-        query = "SELECT * FROM data.model_data_m_view"
+        query = "SELECT * FROM ml.model_data_m_view"
 
         if limit is not None:
             query += f" LIMIT {limit}"
