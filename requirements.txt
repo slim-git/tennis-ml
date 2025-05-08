@@ -8,3 +8,5 @@ uvicorn==0.34.1
 gunicorn==23.0.0
 # database operations
 psycopg[binary]==3.2.6
+sqlalchemy==2.0.40
+alembic==1.15.2
