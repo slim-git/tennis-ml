@@ -12,8 +12,8 @@ def get_connection() -> Generator[psycopg.Connection, None, None]:
     DATABASE_URL = os.getenv("DATABASE_URL")
     if not DATABASE_URL:
         raise ValueError("DATABASE_URL is not set in environment variables")
-    
-    conn = psycopg.connect(conninfo=DATABASE_URL)
+
+    conn = psycopg.connect(conninfo=DATABASE_URL.replace("+psycopg", ""))
 
     try:
         yield conn
