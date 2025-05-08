@@ -1,7 +1,7 @@
 """add model_data_m_view
 
 Revision ID: 2902890ae133
-Revises: 
+Revises: 0e832792e8c4
 Create Date: 2025-05-08 16:42:24.585635
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = '2902890ae133'
-down_revision: Union[str, None] = None
+down_revision: Union[str, None] = '0e832792e8c4'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
