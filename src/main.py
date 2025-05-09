@@ -24,6 +24,8 @@ from dotenv import load_dotenv
 from mlflow.exceptions import RestException
 
 from src.entity.model import ModelInput, ModelOutput
+from src.repository.model_data import load_model_data
+from src.service.data_quality import DataChecker
 from src.service.model import (
     run_experiment,
     predict,
@@ -154,6 +156,30 @@ async def list_available_models():
     List the available models
     """
     return list_registered_models()
+
+@app.get("/check_data_quality", tags=["data"], description="Check the data quality")
+async def check_data_quality(background_tasks: BackgroundTasks):
+    """
+    Check the data quality
+    """
+    # Get the API key and project ID from the environment variables
+    api_key = os.getenv("EVIDENTLY_API_KEY")
+    project_id = os.getenv("EVIDENTLY_PROJECT_ID")
+    ref_dataset_id = os.getenv("EVIDENTLY_REF_DATASET_ID")
+
+    # Check if the API key and project ID are set
+    if not api_key or not project_id or not ref_dataset_id:
+        return JSONResponse(content={"status": "unhealthy", "detail": "Evidently API key or project ID not set"},
+                            status_code=HTTP_503_SERVICE_UNAVAILABLE)
+    
+    # Get the newest data from the database
+    df = load_model_data()
+
+    # Schedule the data quality check
+    background_tasks.add_task(func=DataChecker(api_key, project_id, ref_dataset_id).check_data,
+                              df=df)
+    
+    return {"message": "Data quality check scheduled"}
 
 # ------------------------------------------------------------------------------
 @app.get("/check_health", tags=["general"], description="Check the health of the ML module")
