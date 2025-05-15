@@ -16,7 +16,11 @@ def load_model_data(limit: Optional[int] = None) -> pd.DataFrame:
 
     # Remove rows with null values
     data.dropna(inplace=True)
+
+    # Remove rows where 'victory_type' is not 'Completed'
+    data = data[data['victory_type'] == 'Completed']
     
+    # Remove rows where 'tournament_series' is not in the specified list
     data = data[data['tournament_series'].isin(['Grand Slam', 'Masters 1000', 'Masters', 'Masters Cup', 'ATP500', 'ATP250'])]
 
     return data
