@@ -97,8 +97,8 @@ def create_pipeline(algo: all_algorithms = 'MLP') -> Pipeline:
         Pipeline: A scikit-learn pipeline object.
     """
     # Define the features, numerical and categorical
-    cat_features = [f.name for f in Feature.get_features_by_type('category') if f not in [Feature.DIFF_POINTS]]
-    num_features = [f.name for f in Feature.get_features_by_type('number') if f not in [Feature.DIFF_POINTS]]
+    cat_features = [f.name for f in Feature.get_features_by_type('category')]
+    num_features = [f.name for f in Feature.get_features_by_type('number')]
 
     # Pipeline for numerical variables
     num_transformer = Pipeline(steps=[
