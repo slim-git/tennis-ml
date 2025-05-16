@@ -337,10 +337,10 @@ def predict(
     proba = pipeline.predict_proba(new_match)[0]
 
     # Print the result
-    logging.info("\n--- 📊 Result ---")
-    logging.info(f"🏆 Win probability : {proba[1]:.2f}")
-    logging.info(f"❌ Lose probability : {proba[0]:.2f}")
-    logging.info(f"🎾 Prediction : {'Victory' if prediction == 1 else 'Loss'}")
+    logger.info("\n--- 📊 Result ---")
+    logger.info(f"🏆 Win probability : {proba[1]:.2f}")
+    logger.info(f"❌ Lose probability : {proba[0]:.2f}")
+    logger.info(f"🎾 Prediction : {'Victory' if prediction == 1 else 'Loss'}")
 
     return {"result": prediction.item(), "prob": [p.item() for p in proba]}
 
@@ -408,7 +408,7 @@ def run_experiment(
         )
 
     # Print timing
-    logging.info(f"...Training Done! --- Total training time: {time.time() - start_time} seconds")
+    logger.info(f"...Training Done! --- Total training time: {time.time() - start_time} seconds")
 
 def list_registered_models() -> List[Dict]:
     """
@@ -448,7 +448,7 @@ def load_model(name: str, version: str = 'latest') -> Pipeline:
     # Load the model
     pipeline = mlflow.sklearn.load_model(model_uri=model_info.latest_versions[0].source)
 
-    logging.info(f'Model {name} loaded')
+    logger.info(f'Model {name} loaded')
 
     models[name] = pipeline
 
