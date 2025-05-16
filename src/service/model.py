@@ -57,31 +57,28 @@ def create_pairwise_data(df: pd.DataFrame) -> pd.DataFrame:
             Feature.SERIES.name: row['tournament_series'],
             Feature.SURFACE.name: row['tournament_surface'],
             Feature.COURT.name: row['tournament_court'],
-            Feature.DIFF_RANKING.name: row['winner_rank'] - row['loser_rank'],
-            Feature.DIFF_POINTS.name: row['winner_points'] - row['loser_points'],
-            Feature.P1_PLAY_HAND.name: row['w_play_hand'],
-            Feature.P1_BACK_HAND.name: row['w_back_hand'],
-            Feature.P2_PLAY_HAND.name: row['l_play_hand'],
-            Feature.P2_BACK_HAND.name: row['l_back_hand'],
-            Feature.DIFF_HEIGHT.name: row['w_height_cm'] - row['l_height_cm'],
-            Feature.DIFF_WEIGHT.name: row['w_weight_kg'] - row['l_weight_kg'],
-            Feature.DIFF_AGE.name: row['w_year_of_birth'] - row['l_year_of_birth'],
-            Feature.DIFF_PRO_AGE.name: row['w_pro_year'] - row['l_pro_year'],
+            Feature.DIFF_RANKING.name: row['diff_rank'],
+            Feature.MEAN_RANKING.name: row['mean_rank'],
+            Feature.DIFF_PLAY_HAND.name: row['diff_play_hand'],
+            Feature.DIFF_BACK_HAND.name: row['diff_back_hand'],
+            Feature.DIFF_HEIGHT.name: row['diff_height_cm'],
+            Feature.MEAN_HEIGHT.name: row['mean_height_cm'],
+            Feature.DIFF_WEIGHT.name: row['diff_weight_kg'],
+            Feature.MEAN_WEIGHT.name: row['mean_weight_kg'],
+            Feature.DIFF_AGE.name: row['diff_year_of_birth'],
+            Feature.DIFF_PRO_YEAR.name: row['diff_pro_year'],
             'target': 1 # Player in first position won
         }
 
         # Record 2 : invert players
         record_2 = record_1.copy()
         record_2[Feature.DIFF_RANKING.name] *= -1
-        record_2[Feature.DIFF_POINTS.name] *= -1
+        record_2[Feature.DIFF_PLAY_HAND.name] *= -1
+        record_2[Feature.DIFF_BACK_HAND.name] *= -1
         record_2[Feature.DIFF_HEIGHT.name] *= -1
         record_2[Feature.DIFF_WEIGHT.name] *= -1
         record_2[Feature.DIFF_AGE.name] *= -1
-        record_2[Feature.DIFF_PRO_AGE.name] *= -1
-        record_2[Feature.P1_PLAY_HAND.name] = record_1[Feature.P2_PLAY_HAND.name]
-        record_2[Feature.P1_BACK_HAND.name] = record_1[Feature.P2_BACK_HAND.name]
-        record_2[Feature.P2_PLAY_HAND.name] = record_1[Feature.P1_PLAY_HAND.name]
-        record_2[Feature.P2_BACK_HAND.name] = record_1[Feature.P1_BACK_HAND.name]
+        record_2[Feature.DIFF_PRO_YEAR.name] *= -1
         record_2['target'] = 0 # Player in first position lost
 
         records.append(record_1)
@@ -256,7 +253,7 @@ def preprocess_data(df: pd.DataFrame, test_size: float = 0.2) -> Tuple:
     # Format data for the model
     df_model = create_pairwise_data(df)
 
-    features = [f.name for f in Feature.get_all_features() if f not in [Feature.DIFF_POINTS]]
+    features = [f.name for f in Feature.get_all_features()]
     X = df_model[features]
     y = df_model['target']
 
@@ -324,14 +321,15 @@ def predict(
         Feature.SURFACE.name: surface,
         Feature.COURT.name: court,
         Feature.DIFF_RANKING.name: p1_rank - p2_rank,
-        Feature.P1_PLAY_HAND.name: p1_play_hand,
-        Feature.P1_BACK_HAND.name: p1_back_hand,
-        Feature.P2_PLAY_HAND.name: p2_play_hand,
-        Feature.P2_BACK_HAND.name: p2_back_hand,
+        Feature.MEAN_RANKING.name: (p1_rank + p2_rank) / 2,
+        Feature.DIFF_PLAY_HAND.name: 0 if p1_play_hand == p2_play_hand else (1 if p1_play_hand == 'R' else -1),
+        Feature.DIFF_BACK_HAND.name: p1_back_hand - p2_back_hand,
         Feature.DIFF_HEIGHT.name: p1_height - p2_height,
+        Feature.MEAN_HEIGHT.name: (p1_height + p2_height) / 2,
         Feature.DIFF_WEIGHT.name: p1_weight - p2_weight,
+        Feature.MEAN_WEIGHT.name: (p1_weight + p2_weight) / 2,
         Feature.DIFF_AGE.name: p1_year_of_birth - p2_year_of_birth,
-        Feature.DIFF_PRO_AGE.name: p1_pro_year - p2_pro_year
+        Feature.DIFF_PRO_YEAR.name: p1_pro_year - p2_pro_year
     }])
 
     # Use the pipeline to make a prediction
