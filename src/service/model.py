@@ -20,7 +20,7 @@ from sklearn.metrics import (
     roc_auc_score,
     classification_report
 )
-from src.enums import Feature
+from src.enums import Feature, PlayHand
 
 from src.repository.model_data import load_model_data
 
@@ -301,14 +301,14 @@ def predict(
     surface: str,
     court: str,
     p1_rank: int,
-    p1_play_hand: str,
+    p1_play_hand: PlayHand,
     p1_back_hand: int,
     p1_height: int,
     p1_weight: int,
     p1_year_of_birth: int,
     p1_pro_year: int,
     p2_rank: int,
-    p2_play_hand: str,
+    p2_play_hand: PlayHand,
     p2_back_hand: int,
     p2_height: int,
     p2_weight: int,
@@ -322,7 +322,7 @@ def predict(
         Feature.COURT.name: court,
         Feature.DIFF_RANKING.name: p1_rank - p2_rank,
         Feature.MEAN_RANKING.name: (p1_rank + p2_rank) / 2,
-        Feature.DIFF_PLAY_HAND.name: 0 if p1_play_hand == p2_play_hand else (1 if p1_play_hand == 'R' else -1),
+        Feature.DIFF_PLAY_HAND.name: p1_play_hand - p2_play_hand,
         Feature.DIFF_BACK_HAND.name: p1_back_hand - p2_back_hand,
         Feature.DIFF_HEIGHT.name: p1_height - p2_height,
         Feature.MEAN_HEIGHT.name: (p1_height + p2_height) / 2,

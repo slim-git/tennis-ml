@@ -1,4 +1,4 @@
-from src.enums import Feature
+from src.enums import Feature, PlayHand
 
 def test_get_features_by_type():
     """
@@ -19,3 +19,11 @@ def test_get_all_features():
     features = Feature.get_all_features()
     assert len(features) == 13
 
+def testPlayHandSubstraction():
+    """
+    Test the method PlayHand.__sub__
+    """
+    assert PlayHand.LEFT - PlayHand.LEFT == 0
+    assert PlayHand.RIGHT - PlayHand.RIGHT == 0
+    assert PlayHand.RIGHT - PlayHand.LEFT == 1
+    assert PlayHand.LEFT - PlayHand.RIGHT == -1

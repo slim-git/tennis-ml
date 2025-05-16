@@ -1,5 +1,6 @@
 from typing import Literal, Optional, List
 from pydantic import BaseModel, Field
+from src.enums import PlayHand
 
 
 class ModelInput(BaseModel):
@@ -14,8 +15,8 @@ class ModelInput(BaseModel):
     p2_weight: Optional[int] = Field(gt=0, default=80, description="The weight of the 2nd player in kilograms")
     p1_year_of_birth: Optional[int] = Field(gt=1950, default=1980, description="The year of birth of the 1st player")
     p2_year_of_birth: Optional[int] = Field(gt=1950, default=1980, description="The year of birth of the 2nd player")
-    p1_play_hand: Literal['Right', 'Left'] = Field(default='Right', description="The play hand of the 1st player")
-    p2_play_hand: Literal['Right', 'Left'] = Field(default='Right', description="The play hand of the 2nd player")
+    p1_play_hand: PlayHand = Field(default=PlayHand.RIGHT, description="The play hand of the 1st player")
+    p2_play_hand: PlayHand = Field(default=PlayHand.RIGHT, description="The play hand of the 2nd player")
     p1_back_hand: int = Field(default=1, ge=1, le=2, description="The back hand of the 1st player. 1 for one-handed, 2 for two-handed")
     p2_back_hand: int = Field(default=1, ge=1, le=2, description="The back hand of the 2nd player. 1 for one-handed, 2 for two-handed")
     p1_pro_year: Optional[int] = Field(gt=1970, default=2000, description="The year the 1st player turned pro")

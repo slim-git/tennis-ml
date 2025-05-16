@@ -44,3 +44,19 @@ class Feature(Enum):
     @classmethod
     def get_all_features(cls) -> List['Feature']:
         return [feature for feature in cls]
+
+class PlayHand(Enum):
+    LEFT = 'Left'
+    RIGHT = 'Right'
+
+    @classmethod
+    def get_play_hands(cls) -> List[str]:
+        return [hand.value for hand in cls]
+    
+    def __sub__(self, other: 'PlayHand') -> int:
+        if self == other:
+            return 0
+        elif self == PlayHand.RIGHT:
+            return 1
+        else:
+            return -1
