@@ -83,9 +83,9 @@ def redirect_to_docs():
 
 @app.get("/run_experiment", tags=["model"], description="Schedule a run of the ML experiment")
 async def run_xp(background_tasks: BackgroundTasks,
-                 algo: all_algorithms = Annotated[Field(default='LogisticRegression', description="The algorithm to use for training"), Query()],
-                 registered_model_name: Optional[str] = Annotated[Field(default=None, description="The name of the registered model"), Query()],
-                 experiment_name: str = Annotated[Field(default="Tennis Prediction", description="The name of the experiment"), Query()]):
+                algo: str = Query(default="LogisticRegression", description="The algorithm to use for training"),
+                registered_model_name: Optional[str] = Query(default=None, description="The name of the registered model"),
+                experiment_name: Optional[str] = Query(default="Tennis Prediction", description="The name of the experiment")):
     """
     Train the model
     """
