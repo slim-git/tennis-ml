@@ -64,8 +64,10 @@ def upgrade() -> None:
                 winner.name AS winner_name,
                 w_caracs.height_cm AS w_height_cm,
                 w_caracs.weight_kg AS w_weight_kg,
-                w_caracs.pro_year AS w_pro_year,
-                DATE_PART('year', w_caracs.date_of_birth::date) AS w_year_of_birth,
+                -- Age at the time of the match
+                EXTRACT(YEAR FROM AGE(m.date::date, w_caracs.date_of_birth::date)) AS w_age,
+                -- Experience at the time of the match
+                EXTRACT(YEAR FROM m.date::date) - w_caracs.pro_year AS w_nb_pro_years,
                 w_caracs.play_hand AS w_play_hand,
                 w_caracs.back_hand AS w_back_hand,
 
@@ -73,8 +75,10 @@ def upgrade() -> None:
                 loser.name AS loser_name,
                 l_caracs.height_cm AS l_height_cm,
                 l_caracs.weight_kg AS l_weight_kg,
-                l_caracs.pro_year AS l_pro_year,
-                DATE_PART('year', l_caracs.date_of_birth::date) AS l_year_of_birth,
+                -- Age at the time of the match
+                EXTRACT(YEAR FROM AGE(m.date::date, l_caracs.date_of_birth::date)) AS l_age,
+                -- Experience at the time of the match
+                EXTRACT(YEAR FROM m.date::date) - l_caracs.pro_year AS l_nb_pro_years,
                 l_caracs.play_hand AS l_play_hand,
                 l_caracs.back_hand AS l_back_hand,
 
@@ -118,8 +122,8 @@ def upgrade() -> None:
             w_weight_kg - l_weight_kg AS diff_weight_kg,
             (w_weight_kg + l_weight_kg) / 2.0 AS mean_weight_kg,
 
-            w_pro_year - l_pro_year AS diff_pro_year,
-            w_year_of_birth - l_year_of_birth AS diff_year_of_birth,
+            w_nb_pro_years - l_nb_pro_years AS diff_nb_pro_years,
+            w_age - l_age AS diff_age,
 
             CASE 
                 WHEN w_play_hand = l_play_hand THEN 0
@@ -143,7 +147,7 @@ def upgrade() -> None:
             OWNER TO tennis_admin;
     """
     sql_index = """
-        CREATE INDEX idx_unique_model_data_m_view_match_id
+        CREATE UNIQUE INDEX idx_unique_model_data_m_view_match_id
             ON ml.model_data_m_view USING btree
             (match_id)
             TABLESPACE pg_default;

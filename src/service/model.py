@@ -66,7 +66,7 @@ def create_pairwise_data(df: pd.DataFrame) -> pd.DataFrame:
             Feature.DIFF_WEIGHT.name: row['diff_weight_kg'],
             Feature.MEAN_WEIGHT.name: row['mean_weight_kg'],
             Feature.DIFF_AGE.name: row['diff_year_of_birth'],
-            Feature.DIFF_PRO_YEAR.name: row['diff_pro_year'],
+            Feature.DIFF_NB_PRO_YEARS.name: row['diff_nb_pro_years'],
             'target': 1 # Player in first position won
         }
 
@@ -78,7 +78,7 @@ def create_pairwise_data(df: pd.DataFrame) -> pd.DataFrame:
         record_2[Feature.DIFF_HEIGHT.name] *= -1
         record_2[Feature.DIFF_WEIGHT.name] *= -1
         record_2[Feature.DIFF_AGE.name] *= -1
-        record_2[Feature.DIFF_PRO_YEAR.name] *= -1
+        record_2[Feature.DIFF_NB_PRO_YEARS.name] *= -1
         record_2['target'] = 0 # Player in first position lost
 
         records.append(record_1)
@@ -329,7 +329,7 @@ def predict(
         Feature.DIFF_WEIGHT.name: p1_weight - p2_weight,
         Feature.MEAN_WEIGHT.name: (p1_weight + p2_weight) / 2,
         Feature.DIFF_AGE.name: p1_year_of_birth - p2_year_of_birth,
-        Feature.DIFF_PRO_YEAR.name: p1_pro_year - p2_pro_year
+        Feature.DIFF_NB_PRO_YEARS.name: p1_pro_year - p2_pro_year
     }])
 
     # Use the pipeline to make a prediction

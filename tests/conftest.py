@@ -18,7 +18,7 @@ def simple_match():
         'mean_height_cm': [184],
         'diff_weight_kg': [6],
         'mean_weight_kg': [83],
-        'diff_pro_year': [-3],
+        'diff_nb_pro_years': [-3],
         'diff_year_of_birth': [-1],
     })
 
@@ -35,7 +35,7 @@ def simple_match_pairwise_data(simple_match: pd.DataFrame):
     mean_height = simple_match['mean_height_cm'].values[0]
     diff_weight = simple_match['diff_weight_kg'].values[0]
     mean_weight = simple_match['mean_weight_kg'].values[0]
-    diff_pro_age = simple_match['diff_pro_year'].values[0]
+    diff_nb_pro_years = simple_match['diff_nb_pro_years'].values[0]
     diff_age = simple_match['diff_year_of_birth'].values[0]
 
     return pd.DataFrame({
@@ -43,7 +43,7 @@ def simple_match_pairwise_data(simple_match: pd.DataFrame):
         'Surface': [surface, surface],
         'Court': [court, court],
 
-        'diffProYear': [diff_pro_age, -diff_pro_age],
+        'diffNbProYears': [diff_nb_pro_years, -diff_nb_pro_years],
         'diffAge': [diff_age, -diff_age],
 
         'diffPlayHand': [diff_play_hand, -diff_play_hand],
@@ -67,7 +67,7 @@ def simple_match_empty():
         'Surface': [],
         'Court': [],
 
-        'diffProAge': [],
+        'diffNbProYears': [],
         'diffAge': [],
 
         'diffPlayHand': [],

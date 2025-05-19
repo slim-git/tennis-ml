@@ -17,7 +17,7 @@ class Feature(Enum):
     MEAN_HEIGHT = ('meanHeight', 'number')
     DIFF_WEIGHT = ('diffWeight', 'number')
     MEAN_WEIGHT = ('meanWeight', 'number')
-    DIFF_PRO_YEAR = ('diffProYear', 'number')
+    DIFF_NB_PRO_YEARS = ('diffNbProYears', 'number')
     DIFF_AGE = ('diffAge', 'number')
     
 
