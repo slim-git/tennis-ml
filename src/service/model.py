@@ -67,7 +67,7 @@ def create_pairwise_data(df: pd.DataFrame) -> pd.DataFrame:
             Feature.MEAN_HEIGHT.name: row['mean_height_cm'],
             Feature.DIFF_WEIGHT.name: row['diff_weight_kg'],
             Feature.MEAN_WEIGHT.name: row['mean_weight_kg'],
-            Feature.DIFF_AGE.name: row['diff_year_of_birth'],
+            Feature.DIFF_AGE.name: row['diff_age'],
             Feature.DIFF_NB_PRO_YEARS.name: row['diff_nb_pro_years'],
             'target': 1 # Player in first position won
         }
