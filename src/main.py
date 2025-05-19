@@ -19,7 +19,6 @@ from starlette.status import (
     HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_503_SERVICE_UNAVAILABLE)
-from pydantic import Field
 from dotenv import load_dotenv
 from mlflow.exceptions import RestException
 
@@ -31,7 +30,6 @@ from src.service.model import (
     predict,
     list_registered_models,
     load_model,
-    all_algorithms,
 )
 from src.repository.common import get_connection
 from psycopg import Connection
