@@ -141,6 +141,7 @@ def upgrade() -> None:
             max_loser
 
         FROM data
+        ORDER BY date DESC, match_id DESC
         WITH DATA;
 
         ALTER TABLE IF EXISTS ml.model_data_m_view
