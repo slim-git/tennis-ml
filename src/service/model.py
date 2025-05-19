@@ -358,7 +358,7 @@ def get_dataset_paths_in_registry(model_name: str) -> Optional[Dict[str, str]]:
 
     try:
         versions = client.search_model_versions(f"name='{model_name}'")
-        # Trie les versions de la plus récente à la plus ancienne
+        # Sort the versions by version number in descending order
         versions_sorted = sorted(versions, key=lambda v: int(v.version), reverse=True)
         
         for version in versions_sorted:
