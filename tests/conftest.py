@@ -19,7 +19,7 @@ def simple_match():
         'diff_weight_kg': [6],
         'mean_weight_kg': [83],
         'diff_nb_pro_years': [-3],
-        'diff_year_of_birth': [-1],
+        'diff_age': [-1],
     })
 
 @pytest.fixture
@@ -36,7 +36,7 @@ def simple_match_pairwise_data(simple_match: pd.DataFrame):
     diff_weight = simple_match['diff_weight_kg'].values[0]
     mean_weight = simple_match['mean_weight_kg'].values[0]
     diff_nb_pro_years = simple_match['diff_nb_pro_years'].values[0]
-    diff_age = simple_match['diff_year_of_birth'].values[0]
+    diff_age = simple_match['diff_age'].values[0]
 
     return pd.DataFrame({
         'Series': [series, series],
