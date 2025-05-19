@@ -46,6 +46,8 @@ all_algorithms = Literal[
     'Bagging',
 ]
 
+client = None
+
 def create_pairwise_data(df: pd.DataFrame) -> pd.DataFrame:
     """
     Creates a balanced dataset with pairwise comparisons
@@ -344,11 +346,48 @@ def predict(
 
     return {"result": prediction.item(), "prob": [p.item() for p in proba]}
 
+def get_dataset_paths_in_registry(model_name: str) -> Optional[Dict[str, str]]:
+    """
+    Get the dataset path in the MLflow registry.
+    """
+    if not model_name:
+        raise ValueError("Model name is required.")
+    
+    client = get_mlflow_client()
+    data = None
+
+    try:
+        versions = client.search_model_versions(f"name='{model_name}'")
+        # Trie les versions de la plus récente à la plus ancienne
+        versions_sorted = sorted(versions, key=lambda v: int(v.version), reverse=True)
+        
+        for version in versions_sorted:
+            run_id = version.run_id
+            try:
+                # Download the dataset
+                data = {
+                    'X_train': mlflow.artifacts.download_artifacts(run_id=run_id, artifact_path="datasets/X_train.csv"),
+                    'X_test': mlflow.artifacts.download_artifacts(run_id=run_id, artifact_path="datasets/X_test.csv"),
+                    'y_train': mlflow.artifacts.download_artifacts(run_id=run_id, artifact_path="datasets/y_train.csv"),
+                    'y_test': mlflow.artifacts.download_artifacts(run_id=run_id, artifact_path="datasets/y_test.csv"),
+                }
+
+                return data
+            except Exception:
+                continue
+    except Exception as e:
+        logger.exception(f"Model {model_name} not found: {e}")
+    
+    logger.info(f"No artifacts found for model {model_name}.")
+    return None
+
 def run_experiment(
         artifact_path: str = None,
         algo: all_algorithms = 'LogisticRegression',
         registered_model_name: Optional[str] = None,
         experiment_name: str = 'Tennis Prediction',
+        force_dataset_logging: bool = False,
+        force_fresh_data_loading: bool = False,
         ):
     """
     Run the entire ML experiment pipeline.
@@ -368,21 +407,32 @@ def run_experiment(
     # Set tracking URI to your mlflow application
     mlflow.set_tracking_uri(os.environ["MLFLOW_SERVER_URI"])
 
-    # Start timing
-    start_time = time.time()
-
-    # Load and preprocess data
-    df = load_model_data()
-    X_train, X_test, y_train, y_test = preprocess_data(df)
-
-    # Create pipeline
-    pipe = create_pipeline(algo=algo)
-
     # Set experiment's info 
     mlflow.set_experiment(experiment_name)
 
     # Get our experiment info
     experiment = mlflow.get_experiment_by_name(experiment_name)
+
+    # Start timing
+    start_time = time.time()
+
+    # Load and preprocess data
+    dataset_paths = get_dataset_paths_in_registry(registered_model_name)
+    existing_data = dataset_paths is not None and all(path is not None for path in dataset_paths.values())
+    
+    if existing_data and not force_fresh_data_loading:
+        logger.info("Dataset found in registry. Loading from registry...")
+        X_train = pd.read_csv(dataset_paths['X_train'])
+        X_test = pd.read_csv(dataset_paths['X_test'])
+        y_train = pd.read_csv(dataset_paths['y_train'])
+        y_test = pd.read_csv(dataset_paths['y_test'])
+    else:
+        logger.info("Dataset not found in registry. Loading from Postgres...")
+        df = load_model_data()
+        X_train, X_test, y_train, y_test = preprocess_data(df)
+
+    # Create pipeline
+    pipe = create_pipeline(algo=algo)
 
     # Call mlflow autolog
     mlflow.sklearn.autolog(log_models=True, log_input_examples=False, log_model_signatures=False)
@@ -407,19 +457,54 @@ def run_experiment(
             signature=signature
         )
 
+        if not existing_data or force_dataset_logging:
+            # Save datasets to CSV
+            logger.info("Saving datasets to CSV...")
+
+            X_train_filename = 'X_train.csv'
+            X_train.to_csv(X_train_filename, index=False)
+            mlflow.log_artifact(X_train_filename, artifact_path="datasets")
+
+            X_test_filename = 'X_test.csv'
+            X_test.to_csv(X_test_filename, index=False)
+            mlflow.log_artifact(X_test_filename, artifact_path="datasets")
+
+            y_train_filename = 'y_train.csv'
+            y_train.to_csv(y_train_filename, index=False)
+            mlflow.log_artifact(y_train_filename, artifact_path="datasets")
+
+            y_test_filename = 'y_test.csv'
+            y_test.to_csv(y_test_filename, index=False)
+            mlflow.log_artifact(y_test_filename, artifact_path="datasets")
+
     # Print timing
     logger.info(f"...Training Done! --- Total training time: {time.time() - start_time} seconds")
 
-def list_registered_models() -> List[Dict]:
+def get_mlflow_client() -> MlflowClient:
     """
-    List all the registered models
+    Get the MLflow client
     """
-    # Set tracking URI to your Heroku application
+    global client
+    if client is not None:
+        return client
+    
     tracking_uri = os.environ.get("MLFLOW_SERVER_URI")
     if tracking_uri is None:
         raise ValueError("MLFLOW_SERVER_URI environment variable is not set.")
 
     client = MlflowClient(tracking_uri=tracking_uri)
+    
+    return client
+
+def list_registered_models() -> List[Dict]:
+    """
+    List all the registered models
+    """
+    tracking_uri = os.environ.get("MLFLOW_SERVER_URI")
+    if tracking_uri is None:
+        raise ValueError("MLFLOW_SERVER_URI environment variable is not set.")
+
+    client = get_mlflow_client()
     # Should be:
     #   results = client.search_registered_models()
     # but this is not working from inside the container
@@ -440,8 +525,7 @@ def load_model(name: str, version: str = 'latest') -> Pipeline:
     if name in models.keys():
         return models[name]
     
-    mlflow.set_tracking_uri(os.environ["MLFLOW_SERVER_URI"])
-    client = MlflowClient()
+    client = get_mlflow_client()
 
     model_info = client.get_registered_model(name)
 
