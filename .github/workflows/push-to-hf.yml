@@ -16,6 +16,13 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+
+      - name: Build Docker image
+        run: docker build --build-arg TEST=true -t test_image .
+
+      - name: Run tests inside container
+        run: docker run --rm --env-file .env.test test_image pytest
+      
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HUGGING_FACE_TOKEN }}
