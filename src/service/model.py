@@ -22,6 +22,7 @@ from sklearn.metrics import (
 from src.enums import Feature, PlayHand
 
 from src.repository.model_data import load_model_data
+from src.service.mlflow_config import configure_mlflow, get_mlflow_client
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -32,6 +33,10 @@ logger.setLevel(logging.INFO)  # Explicitly set the logger level to INFO
 
 load_dotenv()
 
+# Initialize MLflow
+configure_mlflow()
+
+# ------------------------------------------------------------------------------
 models = {}
 
 all_algorithms = Literal[
@@ -403,14 +408,13 @@ def run_experiment(
     if not registered_model_name:
         registered_model_name = algo
     
-    # Set tracking URI to your mlflow application
-    mlflow.set_tracking_uri(os.environ["MLFLOW_SERVER_URI"])
+    client = get_mlflow_client()
 
-    # Set experiment's info 
+    # Set experiment's info -> ensures creation of the experiment if it doesn't exist
     mlflow.set_experiment(experiment_name)
 
     # Get our experiment info
-    experiment = mlflow.get_experiment_by_name(experiment_name)
+    experiment = client.get_experiment_by_name(experiment_name)
 
     # Start timing
     start_time = time.time()
@@ -436,7 +440,7 @@ def run_experiment(
     # Call mlflow autolog
     mlflow.sklearn.autolog(log_models=True, log_input_examples=False, log_model_signatures=True)
 
-    with mlflow.start_run(experiment_id=experiment.experiment_id):
+    with client.start_run(experiment_id=experiment.experiment_id):
         # Train model
         train_model(pipe, X_train, y_train)
 
@@ -459,47 +463,27 @@ def run_experiment(
 
             X_train_filename = 'X_train.csv'
             X_train.to_csv(X_train_filename, index=False)
-            mlflow.log_artifact(X_train_filename, artifact_path="datasets")
+            client.log_artifact(X_train_filename, artifact_path="datasets")
 
             X_test_filename = 'X_test.csv'
             X_test.to_csv(X_test_filename, index=False)
-            mlflow.log_artifact(X_test_filename, artifact_path="datasets")
+            client.log_artifact(X_test_filename, artifact_path="datasets")
 
             y_train_filename = 'y_train.csv'
             y_train.to_csv(y_train_filename, index=False)
-            mlflow.log_artifact(y_train_filename, artifact_path="datasets")
+            client.log_artifact(y_train_filename, artifact_path="datasets")
 
             y_test_filename = 'y_test.csv'
             y_test.to_csv(y_test_filename, index=False)
-            mlflow.log_artifact(y_test_filename, artifact_path="datasets")
+            client.log_artifact(y_test_filename, artifact_path="datasets")
 
     # Print timing
     logger.info(f"...Training Done! --- Total training time: {time.time() - start_time} seconds")
-
-def get_mlflow_client() -> MlflowClient:
-    """
-    Get the MLflow client
-    """
-    global client
-    if client is not None:
-        return client
-    
-    tracking_uri = os.environ.get("MLFLOW_SERVER_URI")
-    if tracking_uri is None:
-        raise ValueError("MLFLOW_SERVER_URI environment variable is not set.")
-
-    client = MlflowClient(tracking_uri=tracking_uri)
-    
-    return client
 
 def list_registered_models() -> List[Dict]:
     """
     List all the registered models
     """
-    tracking_uri = os.environ.get("MLFLOW_SERVER_URI")
-    if tracking_uri is None:
-        raise ValueError("MLFLOW_SERVER_URI environment variable is not set.")
-
     client = get_mlflow_client()
     # Should be:
     #   results = client.search_registered_models()
