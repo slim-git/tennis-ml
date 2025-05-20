@@ -510,22 +510,38 @@ def list_registered_models(alias_filter: Optional[List[str]] = None) -> List[Dic
 
     return output
 
-def load_model(name: str, version: str = 'latest') -> Pipeline:
+def load_model(name: str, alias: Optional[str] = None) -> Pipeline:
     """
-    Load a model from MLflow
+    Load a model from MLflow using an alias or default to the latest version.
+
+    Args:
+        name (str): Registered model name.
+        alias (Optional[str]): Alias to identify the version (e.g., 'prod').
+
+    Returns:
+        Pipeline: The loaded sklearn pipeline.
     """
-    if name in models.keys():
+    if name in models:
         return models[name]
-    
+
     client = get_mlflow_client()
 
-    model_info = client.get_registered_model(name)
+    # Construct the model URI
+    if alias:
+        model_key = f"{name}@{alias}"
+    else:
+        # Get the latest version
+        model_info = client.get_registered_model(name)
+        latest_version = model_info.latest_versions[0].version
+        model_key = f"{name}/{latest_version}"
+    
+    model_uri = f"models:/{model_key}"
 
     # Load the model
-    pipeline = mlflow.sklearn.load_model(model_uri=model_info.latest_versions[0].source)
+    pipeline = mlflow.sklearn.load_model(model_uri=model_uri)
 
-    logger.info(f'Model {name} loaded')
+    logger.info(f"Model '{model_key}' loaded from URI: {model_uri}")
 
-    models[name] = pipeline
+    models[model_key] = pipeline  # Cache the loaded model
 
     return pipeline
