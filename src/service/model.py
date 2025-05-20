@@ -6,7 +6,6 @@ import pandas as pd
 from dotenv import load_dotenv
 from typing import Literal, Any, Optional, Tuple, Dict, List
 import mlflow
-from mlflow.models import infer_signature
 from mlflow.tracking import MlflowClient
 from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
@@ -435,7 +434,7 @@ def run_experiment(
     pipe = create_pipeline(algo=algo)
 
     # Call mlflow autolog
-    mlflow.sklearn.autolog(log_models=True, log_input_examples=False, log_model_signatures=False)
+    mlflow.sklearn.autolog(log_models=True, log_input_examples=False, log_model_signatures=True)
 
     with mlflow.start_run(experiment_id=experiment.experiment_id):
         # Train model
@@ -447,14 +446,11 @@ def run_experiment(
         logger.info(f"Confusion Matrix:\n{evaluation_results['confusion_matrix']}\n")
         logger.info(f"ROC AUC: {evaluation_results['roc_auc']}\n")
         logger.info(f"Classification Report:\n{evaluation_results['classification_report']}\n")
-            
-        signature = infer_signature(X_test, pipe.predict(X_test))
 
         mlflow.sklearn.log_model(
             sk_model=pipe,
             artifact_path=artifact_path,
             registered_model_name=registered_model_name,
-            signature=signature
         )
 
         if not existing_data or force_dataset_logging:
