@@ -1,4 +1,3 @@
-import os
 import time
 import joblib
 import logging
@@ -6,7 +5,6 @@ import pandas as pd
 from dotenv import load_dotenv
 from typing import Literal, Any, Optional, Tuple, Dict, List
 import mlflow
-from mlflow.tracking import MlflowClient
 from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -480,10 +478,7 @@ def run_experiment(
     # Print timing
     logger.info(f"...Training Done! --- Total training time: {time.time() - start_time} seconds")
 
-def list_registered_models() -> List[Dict]:
-    """
-    List all the registered models
-    """
+def list_registered_models(alias_filter: Optional[List[str]] = None) -> List[Dict]:
     client = get_mlflow_client()
     # Should be:
     #   results = client.search_registered_models()
@@ -494,8 +489,25 @@ def list_registered_models() -> List[Dict]:
     output = []
     for res in results:
         for mv in res.latest_versions:
-            output.append({"name": mv.name, "run_id": mv.run_id, "version": mv.version})
-    
+            try:
+                aliases = client.get_model_version_aliases(name=mv.name, version=mv.version)
+            except Exception:
+                aliases = []
+            
+            if alias_filter:
+                matched_aliases = list(set(aliases).intersection(alias_filter))
+                if not matched_aliases:
+                    continue
+            else:
+                matched_aliases = aliases
+
+            output.append({
+                "name": mv.name,
+                "run_id": mv.run_id,
+                "version": mv.version,
+                "aliases": matched_aliases
+            })
+
     return output
 
 def load_model(name: str, version: str = 'latest') -> Pipeline:

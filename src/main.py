@@ -2,7 +2,7 @@ import os
 import joblib
 import logging
 import secrets
-from typing import Generator, Optional, Annotated
+from typing import Generator, Optional, Annotated, List
 from fastapi import (
     FastAPI,
     Request,
@@ -149,11 +149,12 @@ async def make_prediction(params: Annotated[ModelInput, Query()]):
     return prediction
 
 @app.get("/list_available_models", tags=["model"], description="List the available models")
-async def list_available_models():
+async def list_available_models(
+    aliases: Optional[List[str]] = Query(default=None, description="List of model aliases to filter the models")):
     """
     List the available models
     """
-    return list_registered_models()
+    return list_registered_models(alias_filter=aliases)
 
 @app.get("/check_data_quality", tags=["data"], description="Check the data quality")
 async def check_data_quality(background_tasks: BackgroundTasks):
