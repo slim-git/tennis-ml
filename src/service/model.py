@@ -349,6 +349,32 @@ def predict(
 
     return {"result": prediction.item(), "prob": [p.item() for p in proba]}
 
+def get_training_dataset(model_name: str, alias: str = "prod") -> Optional[pd.DataFrame]:
+    """
+    Get the dataset path in the MLflow registry.
+    """
+    if not model_name:
+        raise ValueError("Model name is required.")
+    
+    client = get_mlflow_client()
+
+    try:
+        model_version = client.get_model_version_by_alias(
+            name=model_name,
+            alias=alias
+        )
+
+        # Download the dataset
+        data_file = mlflow.artifacts.download_artifacts(run_id=model_version.run_id, artifact_path="datasets/data.csv")
+
+        return pd.read_csv(data_file)
+    except Exception as e:
+        logger.exception(f"Model {model_name} not found: {e}")
+    
+    logger.info(f"No artifacts found for model {model_name}.")
+    
+    return None
+
 def run_experiment(
         artifact_path: str = None,
         algo: all_algorithms = 'LogisticRegression',
@@ -391,7 +417,7 @@ def run_experiment(
     # Call mlflow autolog
     mlflow.sklearn.autolog(log_models=True, log_input_examples=False, log_model_signatures=True)
 
-    with client.start_run(experiment_id=experiment.experiment_id):
+    with mlflow.start_run(experiment_id=experiment.experiment_id) as run:
         # Train model
         train_model(pipe, X_train, y_train)
 
@@ -408,32 +434,20 @@ def run_experiment(
             registered_model_name=registered_model_name,
         )
 
-        alias_name = "latest"
+        alias_name = "latest_model"
         client.set_registered_model_alias(
-            name=model_info.registered_model_name,
-            version=model_info.version,
+            name=registered_model_name,
+            version=model_info.registered_model_version,
             alias=alias_name
         )
-        logger.info(f"Alias '{alias_name}' set on model '{model_info.registered_model_name}' version {model_info.version}")
+        logger.info(f"Alias '{alias_name}' set on model '{registered_model_name}' version {model_info.registered_model_version}")
 
         # Save datasets to CSV
         logger.info("Saving datasets to CSV...")
 
-        X_train_filename = 'X_train.csv'
-        X_train.to_csv(X_train_filename, index=False)
-        client.log_artifact(X_train_filename, artifact_path="datasets")
-
-        X_test_filename = 'X_test.csv'
-        X_test.to_csv(X_test_filename, index=False)
-        client.log_artifact(X_test_filename, artifact_path="datasets")
-
-        y_train_filename = 'y_train.csv'
-        y_train.to_csv(y_train_filename, index=False)
-        client.log_artifact(y_train_filename, artifact_path="datasets")
-
-        y_test_filename = 'y_test.csv'
-        y_test.to_csv(y_test_filename, index=False)
-        client.log_artifact(y_test_filename, artifact_path="datasets")
+        df_filename = 'data.csv'
+        df.to_csv(df_filename, index=False)
+        client.log_artifact(run_id=run.info.run_id, local_path=df_filename, artifact_path="datasets")
 
     # Print timing
     logger.info(f"...Training Done! --- Total training time: {time.time() - start_time} seconds")
