@@ -22,7 +22,7 @@ class ModelInput(BaseModel):
     p1_pro_year: Optional[int] = Field(gt=1970, default=2000, description="The year the 1st player turned pro")
     p2_pro_year: Optional[int] = Field(gt=1970, default=2000, description="The year the 2nd player turned pro")
     model: Optional[str] = Field(default='LogisticRegression', description="The name of the model to use for prediction")
-    alias: Optional[str] = Field(default='latest', description="The alias of the model to use for prediction")
+    alias: Optional[str] = Field(default='prod', description="The alias of the model to use for prediction")
 
 class ModelOutput(BaseModel):
     result: int = Field(description="The prediction result. 1 if player 1 is expected to win, 0 otherwise.", json_schema_extra={"example": "1"})
