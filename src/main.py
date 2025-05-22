@@ -113,7 +113,7 @@ async def make_prediction(params: Annotated[ModelInput, Query()]):
     else:
         # Get the model info
         try:
-            pipeline = load_model(name=params.model, alias=params.version)
+            pipeline = load_model(name=params.model, alias=params.alias)
         except RestException as e:
             logger.error(e)
 
