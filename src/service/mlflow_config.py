@@ -6,7 +6,11 @@ def configure_mlflow():
     """
     Configure global MLflow tracking URI + autologging.
     """
-    tracking_uri = os.environ.get("MLFLOW_SERVER_URI")
+    if "test" == os.getenv("ENV"):
+        # Skip MLflow configuration in test environment
+        return
+    
+    tracking_uri = os.getenv("MLFLOW_SERVER_URI")
     if not tracking_uri:
         raise ValueError("MLFLOW_SERVER_URI is not set in environment variables.")
     
