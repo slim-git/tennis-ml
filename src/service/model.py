@@ -537,9 +537,6 @@ def load_model(name: str, alias: Optional[str] = None) -> Pipeline:
     Returns:
         Pipeline: The loaded sklearn pipeline.
     """
-    if name in models:
-        return models[name]
-
     client = get_mlflow_client()
 
     # Construct the model URI
@@ -551,6 +548,9 @@ def load_model(name: str, alias: Optional[str] = None) -> Pipeline:
         latest_version = model_info.latest_versions[0].version
         model_key = f"{name}/{latest_version}"
     
+    if model_key in models:
+        return models[model_key]
+
     model_uri = f"models:/{model_key}"
 
     # Load the model
