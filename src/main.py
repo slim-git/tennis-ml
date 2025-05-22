@@ -23,8 +23,7 @@ from dotenv import load_dotenv
 from mlflow.exceptions import RestException
 
 from src.entity.model import ModelInput, ModelOutput
-from src.repository.model_data import load_model_data
-from src.service.data_quality import DataChecker
+from src.service.data_quality import DataChecker, check_model_data
 from src.service.model import (
     run_experiment,
     predict,
@@ -172,10 +171,8 @@ async def deploy_model_to_production(
         logger.error(e)
 
         # Return HTTP error 404
-        return HTTPException(
-            status_code=HTTP_404_NOT_FOUND,
-            detail=f"Model {model_name} (version {version}) not found"
-        )
+        return JSONResponse(content={"message": f"Model {model_name} (version {version}) not found"},
+                            status_code=HTTP_404_NOT_FOUND)
 
     return {"message": f"Model {model_name} deployed to production"}
 
@@ -191,34 +188,33 @@ async def undeploy_model_from_production(model_name: str = Query(description="Th
         logger.error(e)
 
         # Return HTTP error 404
-        return HTTPException(
-            status_code=HTTP_404_NOT_FOUND,
-            detail=f"Model {model_name} not found or not in production"
-        )
+        return JSONResponse(content={"message": f"Model {model_name} not found or not in production"},
+                            status_code=HTTP_404_NOT_FOUND)
 
     return {"message": f"Model {model_name} undeployed from production"}
 
 @app.get("/check_data_quality", tags=["data"], description="Check the data quality")
-async def check_data_quality(background_tasks: BackgroundTasks):
+async def check_data_quality(
+    background_tasks: BackgroundTasks,
+    model_name: str = Query(description="The name of the model to check"),
+    project_id: Optional[str] = Query(default=None, description="The ID of the project to send the data quality report to"),
+):
     """
     Check the data quality
     """
     # Get the API key and project ID from the environment variables
     api_key = os.getenv("EVIDENTLY_API_KEY")
-    project_id = os.getenv("EVIDENTLY_PROJECT_ID")
-    ref_dataset_id = os.getenv("EVIDENTLY_REF_DATASET_ID")
+    project_id = project_id or os.getenv("EVIDENTLY_PROJECT_ID")
 
     # Check if the API key and project ID are set
-    if not api_key or not project_id or not ref_dataset_id:
-        return JSONResponse(content={"status": "unhealthy", "detail": "Evidently API key or project ID not set"},
+    if not api_key or not project_id:
+        return JSONResponse(content={"message": "Evidently API key or project ID not set"},
                             status_code=HTTP_503_SERVICE_UNAVAILABLE)
     
-    # Get the newest data from the database
-    df = load_model_data()
-
     # Schedule the data quality check
-    background_tasks.add_task(func=DataChecker(api_key, project_id, ref_dataset_id).check_data,
-                              df=df)
+    background_tasks.add_task(func=check_model_data,
+                              model_name=model_name,
+                              checker=DataChecker(api_key, project_id))
     
     return {"message": "Data quality check scheduled"}
 
