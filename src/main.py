@@ -119,7 +119,7 @@ async def make_prediction(params: Annotated[ModelInput, Query()]):
 
             # Return HTTP error 404
             return HTTPException(
-                status=HTTP_404_NOT_FOUND,
+                status_code=HTTP_404_NOT_FOUND,
                 detail=f"Model {params.model} not found"
             )
 
