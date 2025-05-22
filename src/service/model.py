@@ -5,6 +5,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from typing import Literal, Any, Optional, Tuple, Dict, List
 import mlflow
+from mlflow.exceptions import MlflowException
 from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -408,7 +409,7 @@ def run_experiment(
         )
 
         alias_name = "latest"
-        client.set_model_version_alias(
+        client.set_registered_model_alias(
             name=model_info.registered_model_name,
             version=model_info.version,
             alias=alias_name
@@ -449,8 +450,10 @@ def list_registered_models(alias_filter: Optional[List[str]] = None) -> List[Dic
     for res in results:
         for mv in res.latest_versions:
             try:
-                aliases = client.get_model_version_aliases(name=mv.name, version=mv.version)
-            except Exception:
+                model_version = client.get_model_version(name=mv.name, version=mv.version)
+                aliases = list(model_version.aliases or [])
+            except Exception as e:
+                logger.error(e)
                 aliases = []
             
             if alias_filter:
@@ -468,6 +471,46 @@ def list_registered_models(alias_filter: Optional[List[str]] = None) -> List[Dic
             })
 
     return output
+
+def deploy_model(
+        model_name: str,
+        model_version: str,
+) -> None:
+    """
+    Deploy a model to production
+    """
+    client = get_mlflow_client()
+    try:
+        client.set_registered_model_alias(
+            name=model_name,
+            version=model_version,
+            alias="prod"
+        )
+        logger.info(f"Model '{model_name}' version {model_version} deployed to production.")
+    except MlflowException as e:
+        logger.error(f"Failed to deploy model '{model_name}' version {model_version} to production: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"An unexpected error occurred while deploying model '{model_name}' version {model_version} to production: {e}")
+        raise
+
+def undeploy_model(model_name: str) -> None:
+    """
+    Undeploy a model from production
+    """
+    client = get_mlflow_client()
+
+    # Will raise an error if the alias does not exist
+    client.get_model_version_by_alias(
+        name=model_name,
+        alias="prod"
+    )
+
+    client.delete_registered_model_alias(
+        name=model_name,
+        alias="prod"
+    )
+    logger.info(f"Model {model_name} undeployed from production.")
 
 def load_model(name: str, alias: Optional[str] = None) -> Pipeline:
     """

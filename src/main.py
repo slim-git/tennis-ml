@@ -30,6 +30,8 @@ from src.service.model import (
     predict,
     list_registered_models,
     load_model,
+    deploy_model,
+    undeploy_model,
 )
 from src.repository.common import get_connection
 from psycopg import Connection
@@ -155,6 +157,46 @@ async def list_available_models(
     List the available models
     """
     return list_registered_models(alias_filter=aliases)
+
+@app.post("/deploy_model", tags=["model"], description="Deploy a model")
+async def deploy_model_to_production(
+    model_name: str = Query(description="The name of the model to deploy"),
+    version: str = Query(description="The version of the model to deploy")):
+    """
+    Deploy a model
+    """
+    # Deploy the model
+    try:
+        deploy_model(model_name=model_name, model_version=version)
+    except RestException as e:
+        logger.error(e)
+
+        # Return HTTP error 404
+        return HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail=f"Model {model_name} (version {version}) not found"
+        )
+
+    return {"message": f"Model {model_name} deployed to production"}
+
+@app.post("/undeploy_model", tags=["model"], description="Undeploy a model")
+async def undeploy_model_from_production(model_name: str = Query(description="The name of the model to undeploy")):
+    """
+    Undeploy a model
+    """
+    # Undeploy the model
+    try:
+        undeploy_model(model_name=model_name)
+    except RestException as e:
+        logger.error(e)
+
+        # Return HTTP error 404
+        return HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail=f"Model {model_name} not found or not in production"
+        )
+
+    return {"message": f"Model {model_name} undeployed from production"}
 
 @app.get("/check_data_quality", tags=["data"], description="Check the data quality")
 async def check_data_quality(background_tasks: BackgroundTasks):
